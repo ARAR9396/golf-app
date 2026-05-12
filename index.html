@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Golf Tracker"/>
+<title>Golf Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0d1a0e;font-family:'Courier New',monospace;color:#c8e6c8;min-height:100vh;}
+button{font-family:'Courier New',monospace;cursor:pointer;}
+input,textarea,select{font-family:'Courier New',monospace;}
+.page{display:none;min-height:100vh;}
+.page.active{display:block;}
+#page-home{display:block;}
+.container{max-width:700px;margin:0 auto;padding:16px;}
+.app-header{border-bottom:1px solid #1e3a1f;padding:12px 16px;display:flex;align-items:center;
+  justify-content:space-between;background:#0a130b;flex-wrap:wrap;gap:8px;
+  position:sticky;top:0;z-index:50;}
+.card{background:#0f1f10;border-radius:12px;padding:14px;border:1px solid #1e3a1f;margin-bottom:12px;}
+.card-dark{background:#0a130b;border-radius:12px;padding:14px;border:1px solid #1e3a1f;margin-bottom:12px;}
+.slabel{font-size:10px;color:#4a7a4a;letter-spacing:0.13em;margin-bottom:8px;text-transform:uppercase;}
+.btn{padding:9px 16px;border-radius:8px;border:none;font-family:'Courier New',monospace;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-green{background:linear-gradient(135deg,#5ba85e,#2d6b30);color:#e8f5e8;box-shadow:0 3px 10px #5ba85e22;}
+.btn-outline{background:transparent;border:1px solid #2a4a2a;color:#4a7a4a;}
+.btn-danger{background:transparent;border:1px solid #ba6b6b;color:#ba6b6b;}
+.btn-gold{background:linear-gradient(135deg,#e8b84b,#a07820);color:#0a130b;}
+.btn-full{width:100%;padding:13px;font-size:13px;}
+.btn-sm{padding:5px 10px;font-size:10px;}
+.navbtn{padding:6px 12px;border-radius:7px;border:1px solid #2a3a2a;background:transparent;
+  color:#4a7a4a;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.navbtn.active{background:#5ba85e;border-color:#5ba85e;color:#0a130b;}
+.filtbtn{padding:4px 10px;border-radius:6px;border:1px solid #1e3a1f;background:transparent;
+  color:#3a5a3a;font-size:10px;cursor:pointer;}
+.filtbtn.active{border-color:#5ba85e;background:#5ba85e22;color:#5ba85e;font-weight:700;}
+.pill{padding:6px 11px;border-radius:7px;border:2px solid #1e3a1f;background:transparent;
+  color:#3a5a3a;font-size:11px;cursor:pointer;}
+.tog{padding:6px 11px;border-radius:7px;border:2px solid #2a3a2a;background:transparent;
+  color:#8aab8a;font-size:11px;cursor:pointer;}
+.tog.active{border-color:#5ba85e;background:#5ba85e22;color:#5ba85e;font-weight:700;}
+.tog.active.danger{border-color:#ba6b6b;background:#ba6b6b22;color:#ba6b6b;}
+.field-input{width:100%;background:#0a130b;border:1px solid #1e3a1f;border-radius:8px;
+  color:#c8e6c8;font-family:'Courier New',monospace;font-size:12px;padding:9px 11px;outline:none;}
+.field-input:focus{border-color:#5ba85e;}
+.big-input{width:100%;background:transparent;border:none;border-bottom:2px solid #5ba85e;
+  color:#e8f5e8;font-family:'Courier New',monospace;font-size:24px;font-weight:700;
+  padding:4px 0;outline:none;}
+.banner{padding:9px 14px;font-size:11px;text-align:center;display:none;}
+.banner.ok{background:#5ba85e22;border-bottom:1px solid #5ba85e;color:#5ba85e;}
+.banner.err{background:#ba6b6b22;border-bottom:1px solid #ba6b6b;color:#ba6b6b;}
+.modal-bg{position:fixed;inset:0;background:#000000ee;z-index:200;display:none;
+  align-items:center;justify-content:center;padding:12px;}
+.modal-bg.open{display:flex;}
+.modal{background:#0d1a0e;border:1px solid #2a4a2a;border-radius:14px;
+  padding:18px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+#loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;gap:14px;position:fixed;inset:0;background:#0d1a0e;z-index:999;
+  animation:hideLoader 0s 2s forwards;}
+@keyframes hideLoader{to{display:none;opacity:0;pointer-events:none;}}
+.spinner{width:30px;height:30px;border:3px solid #1a2e1b;border-top-color:#5ba85e;
+  border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.home-card{background:#0f1f10;border-radius:14px;padding:20px;border:1px solid #1e3a1f;
+  margin-bottom:14px;cursor:pointer;transition:border-color 0.2s;}
+.home-card:active{border-color:#5ba85e;}
+.score-badge{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;}
+.be{background:#e8b84b22;color:#e8b84b;border:2px solid #e8b84b;}
+.bb{background:#4fc3f722;color:#4fc3f7;border:2px solid #4fc3f7;}
+.bp{background:#5ba85e22;color:#5ba85e;border:2px solid #5ba85e;}
+.bg{background:#8aab8a22;color:#8aab8a;border:2px solid #8aab8a;}
+.bd{background:#ba6b6b22;color:#ba6b6b;border:2px solid #ba6b6b;}
+.bw{background:#6b222222;color:#e87a7a;border:2px solid #6b2222;}
+.hole-card{background:#0f1f10;border-radius:10px;border:1px solid #1e3a1f;
+  padding:12px;margin-bottom:8px;cursor:pointer;}
+.hole-card.done{border-left:3px solid #5ba85e;}
+.shot-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #1a2e1b;}
+.shot-row:last-child{border-bottom:none;}
+.shot-num{width:22px;height:22px;border-radius:50%;background:#1a2e1b;display:flex;
+  align-items:center;justify-content:center;font-size:9px;color:#4a7a4a;flex-shrink:0;font-weight:700;}
+.caddy-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:6px;}
+.caddy-table th{background:#060e06;color:#4a7a4a;padding:5px 7px;text-align:left;
+  border:1px solid #1e3a1f;font-size:8px;letter-spacing:0.06em;}
+.caddy-table td{padding:6px 7px;border:1px solid #1a2e1b;color:#c8e6c8;}
+.caddy-table tr.best td{background:#5ba85e14;}
+.caddy-table tr:active td{background:#5ba85e22;}
+.caddy-table td.cp{color:#5ba85e;font-weight:700;}
+.caddy-table td.cn{color:#ba6b6b;}
+.matrix-wrap{overflow-x:auto;}
+.mtable{width:100%;border-collapse:collapse;font-size:10px;}
+.mtable th{background:#0a130b;color:#4a7a4a;padding:5px 6px;text-align:center;
+  border:1px solid #1e3a1f;font-size:8px;white-space:nowrap;}
+.mtable th.lc{text-align:left;min-width:44px;}
+.mtable td{padding:5px 6px;text-align:center;border:1px solid #1a2e1b;font-size:10px;color:#8aab8a;}
+.mtable td.ln{text-align:left;font-weight:700;}
+.mtable td.hd{color:#e8f5e8;}
+.mtable td.em{color:#2a4a2a;}
+.scorecard{width:100%;border-collapse:collapse;font-size:9px;}
+.scorecard th,.scorecard td{padding:4px 5px;border:1px solid #1e3a1f;text-align:center;}
+.scorecard th{background:#0a130b;color:#4a7a4a;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.compass{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:210px;margin:0 auto;}
+.cbtn{padding:7px 4px;border-radius:6px;border:1px solid #1e3a1f;background:transparent;
+  color:#3a5a3a;font-size:9px;cursor:pointer;text-align:center;font-family:'Courier New',monospace;}
+.cbtn.active{border-color:#ba6b6b;background:#ba6b6b22;color:#ba6b6b;font-weight:700;}
+.cbtn.ok.active{border-color:#5ba85e;background:#5ba85e22;color:#5ba85e;}
+.sync-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#2a4a2a;margin-right:4px;vertical-align:middle;}
+.sync-dot.s{background:#e8b84b;animation:pulse 1s infinite;}
+.sync-dot.ok{background:#5ba85e;}
+.sync-dot.err{background:#ba6b6b;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.course-tbl{width:100%;border-collapse:collapse;}
+.course-tbl th{background:#0a130b;color:#4a7a4a;padding:4px 6px;border:1px solid #1e3a1f;font-size:9px;text-align:center;}
+.course-tbl th:first-child{text-align:left;}
+.course-tbl td{padding:3px 4px;border:1px solid #1a2e1b;text-align:center;}
+.course-tbl input{width:100%;background:transparent;border:none;color:#c8e6c8;
+  font-family:'Courier New',monospace;font-size:11px;text-align:center;outline:none;padding:2px;}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div style="font-size:40px">⛳</div>
+  <div class="spinner"></div>
+  <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em">LOADING YOUR DATA...</div>
+</div>
+
+<div id="global-banner" class="banner"></div>
+
+<!-- ══════════════════ HOME ══════════════════ -->
+<div id="page-home" class="page">
+  <div style="background:linear-gradient(180deg,#0a130b,#0d1a0e);padding:36px 16px 20px;
+    text-align:center;border-bottom:1px solid #1e3a1f;">
+    <div style="font-size:44px;margin-bottom:10px">⛳</div>
+    <div style="font-size:20px;font-weight:700;color:#e8f5e8;letter-spacing:0.1em">GOLF TRACKER</div>
+    <div style="font-size:10px;color:#4a7a4a;margin-top:4px;letter-spacing:0.12em">PRACTICE · PLAY · IMPROVE</div>
+    <div id="home-hcp" style="display:none;margin-top:10px">
+      <span style="font-size:11px;color:#4a7a4a">HANDICAP INDEX </span>
+      <span id="home-hcp-val" style="font-size:20px;font-weight:700;color:#e8b84b">—</span>
+    </div>
+  </div>
+  <div class="container" style="padding-top:20px">
+    <div class="home-card" onclick="goTo('practice')">
+      <div style="font-size:30px;margin-bottom:8px">🎯</div>
+      <div style="font-size:14px;font-weight:700;color:#e8f5e8;margin-bottom:4px;letter-spacing:0.08em">PRACTICE TRACKER</div>
+      <div style="font-size:10px;color:#4a7a4a;line-height:1.6">Log range shots. Track carry &amp; total by club and swing. Dispersion charts and distance matrix.</div>
+      <div id="home-prac-sub" style="font-size:10px;color:#3a5a3a;margin-top:8px">— shots logged</div>
+    </div>
+    <div class="home-card" onclick="goTo('round')">
+      <div style="font-size:30px;margin-bottom:8px">🏌️</div>
+      <div style="font-size:14px;font-weight:700;color:#e8f5e8;margin-bottom:4px;letter-spacing:0.08em">ROUND TRACKER</div>
+      <div style="font-size:10px;color:#4a7a4a;line-height:1.6">Track every shot on the course. GIR, fairways, putts, scrambling. Caddy suggests clubs from your practice data.</div>
+      <div id="home-round-sub" style="font-size:10px;color:#3a5a3a;margin-top:8px">— rounds played</div>
+    </div>
+    <div class="home-card" onclick="goTo('courses')">
+      <div style="font-size:30px;margin-bottom:8px">🗺️</div>
+      <div style="font-size:14px;font-weight:700;color:#e8f5e8;margin-bottom:4px;letter-spacing:0.08em">COURSE MANAGER</div>
+      <div style="font-size:10px;color:#4a7a4a;line-height:1.6">Save course details — pars, stroke indexes, distances, rating and slope. Build your library for any round.</div>
+      <div id="home-course-sub" style="font-size:10px;color:#3a5a3a;margin-top:8px">— courses saved</div>
+    </div>
+    <div class="home-card" onclick="goTo('dashboard')">
+      <div style="font-size:30px;margin-bottom:8px">📊</div>
+      <div style="font-size:14px;font-weight:700;color:#e8f5e8;margin-bottom:4px;letter-spacing:0.08em">DASHBOARD &amp; HANDICAP</div>
+      <div style="font-size:10px;color:#4a7a4a;line-height:1.6">Full stats across all rounds. GIR%, scrambling, putts per GIR. Live WHS handicap with trend chart.</div>
+    </div>
+    <div style="text-align:center;margin-top:4px">
+      <span class="sync-dot" id="home-dot"></span>
+      <span id="home-sync" style="font-size:9px;color:#2a4a2a">Loading...</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PRACTICE ══════════════════ -->
+<div id="page-practice" class="page">
+  <div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="goTo('home')">← Home</button>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#e8f5e8">PRACTICE TRACKER</div>
+        <div id="ph-sub" style="font-size:9px;color:#4a7a4a">—</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="navbtn active" id="pnav-log"       onclick="pView('log')">Log</button>
+      <button class="navbtn"        id="pnav-history"   onclick="pView('history')">History</button>
+      <button class="navbtn"        id="pnav-dashboard" onclick="pView('dashboard')">Dashboard</button>
+      <button class="navbtn"        onclick="pOpenBag()">🎒</button>
+    </div>
+  </div>
+  <div id="p-banner" class="banner"></div>
+  <div class="container">
+    <div id="pv-log">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— LOG SHOT —</div>
+      <div class="card"><div class="slabel">Club</div><div id="p-club-btns" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
+      <div class="card"><div class="slabel">Swing Type</div><div id="p-swing-btns" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
+      <div class="card">
+        <div class="g2" style="gap:14px">
+          <div><div class="slabel">Carry (yds)</div>
+            <input id="p-carry" class="big-input" type="tel" inputmode="decimal" placeholder="0"
+              oninput="this.value=this.value.replace(/[^0-9.]/g,'')"/></div>
+          <div><div class="slabel">Total (yds)</div>
+            <input id="p-total" class="big-input" type="tel" inputmode="decimal" placeholder="0"
+              style="border-bottom-color:#e8b84b"
+              oninput="this.value=this.value.replace(/[^0-9.]/g,'')"/></div>
+        </div>
+      </div>
+      <div class="card"><div class="slabel">Shot Shape</div><div id="p-shape-btns" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
+      <div class="card">
+        <div class="slabel">Offline Distance &amp; Direction</div>
+        <div class="g2" style="gap:14px">
+          <div><div style="font-size:9px;color:#3a5a3a;margin-bottom:5px">YARDS OFFLINE</div>
+            <input id="p-offline" class="big-input" type="tel" inputmode="decimal" placeholder="0"
+              style="border-bottom-color:#6b8cba;font-size:20px"
+              oninput="this.value=this.value.replace(/[^0-9.]/g,'')"/></div>
+          <div><div style="font-size:9px;color:#3a5a3a;margin-bottom:5px">DIRECTION</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button id="pd-Left"   onclick="pSetDir('Left')"   style="padding:7px;border-radius:7px;border:2px solid #1e3a1f;background:transparent;color:#3a5a3a;font-size:10px;font-weight:700">&lt; Left</button>
+              <button id="pd-Center" onclick="pSetDir('Center')" style="padding:7px;border-radius:7px;border:2px solid #5ba85e;background:#5ba85e22;color:#5ba85e;font-size:10px;font-weight:700">Center</button>
+              <button id="pd-Right"  onclick="pSetDir('Right')"  style="padding:7px;border-radius:7px;border:2px solid #1e3a1f;background:transparent;color:#3a5a3a;font-size:10px;font-weight:700">Right &gt;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="p-err" style="display:none;background:#ba6b6b22;border:1px solid #ba6b6b;border-radius:8px;
+        padding:9px;font-size:11px;color:#ba6b6b;text-align:center;margin-bottom:10px"></div>
+      <button class="btn btn-green btn-full" id="p-log-btn" onclick="pLogShot()">LOG SHOT</button>
+      <div style="font-size:9px;text-align:center;color:#2a4a2a;margin-top:6px" id="p-sync">
+        <span class="sync-dot"></span>Ready
+      </div>
+    </div>
+    <div id="pv-history" style="display:none">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px" id="p-hist-t">— HISTORY —</div>
+      <div id="p-hist-list"></div>
+    </div>
+    <div id="pv-dashboard" style="display:none">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— PRACTICE DASHBOARD —</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:9px;color:#3a5a3a;line-height:2">PERIOD:</span>
+        <button class="filtbtn active" id="pf-all" onclick="pPer('all')">All</button>
+        <button class="filtbtn" id="pf-7d"  onclick="pPer('7d')">7d</button>
+        <button class="filtbtn" id="pf-30d" onclick="pPer('30d')">30d</button>
+        <button class="filtbtn" id="pf-90d" onclick="pPer('90d')">90d</button>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+        <span style="font-size:9px;color:#3a5a3a;line-height:2">SWING:</span>
+        <button class="filtbtn active" id="psf-all"  onclick="pSw('all')">All</button>
+        <button class="filtbtn" id="psf-Full" onclick="pSw('Full')">Full</button>
+        <button class="filtbtn" id="psf-90%"  onclick="pSw('90%')">90%</button>
+        <button class="filtbtn" id="psf-3/4"  onclick="pSw('3/4')">3/4</button>
+        <button class="filtbtn" id="psf-1/2"  onclick="pSw('1/2')">1/2</button>
+        <button class="filtbtn" id="psf-1/4"  onclick="pSw('1/4')">1/4</button>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:9px;color:#3a5a3a;line-height:2">DIST:</span>
+        <button class="filtbtn active" id="pdt-both"  onclick="pDt('both')">Both</button>
+        <button class="filtbtn" id="pdt-carry" onclick="pDt('carry')">Carry</button>
+        <button class="filtbtn" id="pdt-total" onclick="pDt('total')">Total</button>
+      </div>
+      <div style="background:#0a130b;border-radius:10px;border:1px solid #1e3a1f;overflow:hidden;margin-bottom:12px">
+        <div style="padding:10px 12px 0;display:flex;gap:3px;flex-wrap:wrap" id="p-club-tabs"></div>
+        <div id="p-club-det" style="display:none;padding:12px;border-top:1px solid #1a2e1b"></div>
+      </div>
+      <div class="g3" style="margin-bottom:12px">
+        <div class="card" style="text-align:center;margin-bottom:0;padding:10px">
+          <div id="pt-shots" style="font-size:18px;font-weight:700;color:#e8f5e8">—</div>
+          <div style="font-size:8px;color:#3a5a3a;margin-top:1px">SHOTS</div>
+        </div>
+        <div class="card" style="text-align:center;margin-bottom:0;padding:10px">
+          <div id="pt-carry" style="font-size:16px;font-weight:700;color:#5ba85e">—</div>
+          <div style="font-size:8px;color:#3a5a3a;margin-top:1px">AVG CARRY</div>
+        </div>
+        <div class="card" style="text-align:center;margin-bottom:0;padding:10px">
+          <div id="pt-total" style="font-size:16px;font-weight:700;color:#e8b84b">—</div>
+          <div style="font-size:8px;color:#3a5a3a;margin-top:1px">AVG TOTAL</div>
+        </div>
+      </div>
+      <div class="card"><div class="slabel" id="p-mat-t">AVG CARRY / TOTAL BY CLUB &amp; SWING</div>
+        <div class="matrix-wrap"><table class="mtable" id="p-matrix"></table></div></div>
+      <div class="card">
+        <div class="slabel" id="p-disp-t">SHOT DISPERSION</div>
+        <div style="font-size:8px;color:#2a4a2a;margin-bottom:8px">Each dot = one shot · ellipse = dispersion zone</div>
+        <svg id="p-disp-svg" viewBox="0 0 340 420" style="width:100%;max-width:340px;display:block;margin:0 auto;background:#060e06;border-radius:8px"></svg>
+        <div id="p-disp-leg" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+      </div>
+      <div class="card"><div class="slabel" id="p-chart-t">AVG CARRY BY CLUB</div>
+        <div style="font-size:8px;color:#2a4a2a;margin-bottom:10px">Tap a bar for per-club details</div>
+        <div id="p-carry-chart"></div></div>
+      <div class="card"><div class="slabel" id="p-shape-t">SHOT SHAPE</div>
+        <div id="p-shape-stats" style="display:flex;flex-wrap:wrap;gap:5px"></div></div>
+      <div class="card"><div class="slabel" id="p-dir-t">DIRECTION ACCURACY</div>
+        <div class="g3" id="p-dir-stats"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ COURSES ══════════════════ -->
+<div id="page-courses" class="page">
+  <div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="goTo('home')">← Home</button>
+      <div style="font-size:12px;font-weight:700;color:#e8f5e8">COURSE MANAGER</div>
+    </div>
+    <button class="btn btn-green btn-sm" onclick="openCE(null)">+ Add Course</button>
+  </div>
+  <div class="container">
+    <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— SAVED COURSES —</div>
+    <div id="course-list"></div>
+    <div id="course-empty" style="display:none;text-align:center;padding:40px;color:#2a4a2a;font-size:12px">
+      No courses saved yet.<br/>Tap "+ Add Course" to get started.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ROUND TRACKER ══════════════════ -->
+<div id="page-round" class="page">
+  <div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="rBack()">← Home</button>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#e8f5e8" id="rh-title">ROUND TRACKER</div>
+        <div id="rh-sub" style="font-size:9px;color:#4a7a4a">Select a course to begin</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="navbtn active" id="rnav-holes"  onclick="rShowView('holes')">Holes</button>
+      <button class="navbtn"        id="rnav-card"   onclick="rShowView('card')">Card</button>
+      <button class="navbtn"        id="rnav-rounds" onclick="rShowView('rounds')">History</button>
+    </div>
+  </div>
+  <div class="container">
+    <div id="rv-setup">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— START A ROUND —</div>
+      <div class="card">
+        <div class="slabel">Course</div>
+        <select id="r-course-sel" class="field-input" onchange="rCourseChanged()" style="margin-bottom:10px">
+          <option value="">Select a course...</option>
+        </select>
+        <div class="slabel">Tee</div>
+        <div id="r-tee-btns" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+        <div class="g2" style="margin-bottom:0">
+          <div><div class="slabel">Playing Handicap</div>
+            <input id="r-hcp" class="field-input" type="tel" inputmode="decimal" placeholder="e.g. 14"/></div>
+          <div><div class="slabel">Round Type</div>
+            <select id="r-type" class="field-input">
+              <option>Strokeplay</option><option>Stableford</option><option>Matchplay</option>
+            </select></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="slabel">Conditions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <button class="tog active" id="rcond-Sunny"    onclick="rSetCond('Sunny')">☀️ Sunny</button>
+          <button class="tog"        id="rcond-Overcast" onclick="rSetCond('Overcast')">☁️ Overcast</button>
+          <button class="tog"        id="rcond-Rain"     onclick="rSetCond('Rain')">🌧️ Rain</button>
+          <button class="tog"        id="rcond-Wind"     onclick="rSetCond('Wind')">💨 Windy</button>
+          <button class="tog"        id="rcond-Cold"     onclick="rSetCond('Cold')">🥶 Cold</button>
+        </div>
+      </div>
+      <button class="btn btn-green btn-full" onclick="rStart()">START ROUND →</button>
+      <div style="text-align:center;margin-top:8px">
+        <span style="font-size:10px;color:#3a5a3a">No course saved? </span>
+        <button class="btn btn-outline btn-sm" onclick="goTo('courses')">+ Add Course</button>
+      </div>
+    </div>
+    <div id="rv-holes" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.1em" id="r-round-lbl">— ROUND —</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="rShowView('card')">Scorecard</button>
+          <button class="btn btn-green btn-sm" onclick="rFinish()">Finish</button>
+        </div>
+      </div>
+      <div class="card-dark" style="display:flex;gap:12px;align-items:center;margin-bottom:12px;padding:10px 12px;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-size:16px;font-weight:700;color:#e8f5e8" id="rs-score">—</div><div style="font-size:7px;color:#3a5a3a">SCORE</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#5ba85e" id="rs-par">—</div><div style="font-size:7px;color:#3a5a3a">VS PAR</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#4fc3f7" id="rs-gir">—</div><div style="font-size:7px;color:#3a5a3a">GIR</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#ce93d8" id="rs-putts">—</div><div style="font-size:7px;color:#3a5a3a">PUTTS</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#e8b84b" id="rs-fir">—</div><div style="font-size:7px;color:#3a5a3a">FIR</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#80cbc4" id="rs-stbl">—</div><div style="font-size:7px;color:#3a5a3a">STBL</div></div>
+      </div>
+      <div id="r-hole-list"></div>
+    </div>
+    <div id="rv-card" style="display:none">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— SCORECARD —</div>
+      <div style="overflow-x:auto"><table class="scorecard" id="r-scorecard"></table></div>
+      <div class="g3" style="margin-top:12px">
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="rc-tot" style="font-size:18px;font-weight:700;color:#e8f5e8">—</div>
+          <div style="font-size:8px;color:#3a5a3a">TOTAL</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="rc-par" style="font-size:18px;font-weight:700;color:#5ba85e">—</div>
+          <div style="font-size:8px;color:#3a5a3a">VS PAR</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="rc-stbl" style="font-size:18px;font-weight:700;color:#80cbc4">—</div>
+          <div style="font-size:8px;color:#3a5a3a">STABLEFORD</div></div>
+      </div>
+    </div>
+    <div id="rv-rounds" style="display:none">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— ALL ROUNDS —</div>
+      <div id="r-rounds-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="app-header">
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="goTo('home')">← Home</button>
+      <div style="font-size:12px;font-weight:700;color:#e8f5e8">DASHBOARD</div>
+    </div>
+    <div style="display:flex;gap:4px">
+      <button class="navbtn active" id="dnav-stats" onclick="dView('stats')">Stats</button>
+      <button class="navbtn" id="dnav-hcp" onclick="dView('handicap')">Handicap</button>
+    </div>
+  </div>
+  <div class="container">
+    <div id="dv-stats">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— ROUND STATISTICS —</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+        <span style="font-size:9px;color:#3a5a3a;line-height:2.2">ROUNDS:</span>
+        <button class="filtbtn active" id="drf-all" onclick="dSetR('all')">All</button>
+        <button class="filtbtn" id="drf-5"   onclick="dSetR('5')">Last 5</button>
+        <button class="filtbtn" id="drf-10"  onclick="dSetR('10')">Last 10</button>
+        <button class="filtbtn" id="drf-20"  onclick="dSetR('20')">Last 20</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-score" style="font-size:16px;font-weight:700;color:#e8f5e8">—</div><div style="font-size:7px;color:#3a5a3a">AVG SCORE</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-gir" style="font-size:16px;font-weight:700;color:#4fc3f7">—</div><div style="font-size:7px;color:#3a5a3a">GIR %</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-fir" style="font-size:16px;font-weight:700;color:#e8b84b">—</div><div style="font-size:7px;color:#3a5a3a">FIR %</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-putts" style="font-size:16px;font-weight:700;color:#ce93d8">—</div><div style="font-size:7px;color:#3a5a3a">AVG PUTTS</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-scram" style="font-size:16px;font-weight:700;color:#80cbc4">—</div><div style="font-size:7px;color:#3a5a3a">SCRAMBLING</div></div>
+        <div class="card" style="margin-bottom:0;text-align:center;padding:10px">
+          <div id="ds-stbl" style="font-size:16px;font-weight:700;color:#e8b84b">—</div><div style="font-size:7px;color:#3a5a3a">AVG STBL</div></div>
+      </div>
+      <div class="card"><div class="slabel">SCORING BREAKDOWN</div><div id="ds-scoring" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+      <div class="card"><div class="slabel">GIR % BY APPROACH DISTANCE</div><div id="ds-gir-range"></div></div>
+      <div class="card"><div class="slabel">AVG SCORE BY PAR</div><div id="ds-par"></div></div>
+      <div class="card"><div class="slabel">RECENT ROUNDS</div><div id="ds-rounds"></div></div>
+    </div>
+    <div id="dv-handicap" style="display:none">
+      <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.15em;margin-bottom:12px">— WHS HANDICAP —</div>
+      <div class="card" style="text-align:center;padding:22px">
+        <div style="font-size:10px;color:#4a7a4a;letter-spacing:0.13em;margin-bottom:6px">CURRENT HANDICAP INDEX</div>
+        <div id="dh-idx" style="font-size:44px;font-weight:700;color:#e8b84b">—</div>
+        <div id="dh-based" style="font-size:9px;color:#3a5a3a;margin-top:5px">Based on — rounds</div>
+      </div>
+      <div class="card">
+        <div class="slabel">HANDICAP TREND</div>
+        <svg id="dh-trend" viewBox="0 0 340 110"
+          style="width:100%;max-width:340px;display:block;margin:0 auto;background:#060e06;border-radius:8px"></svg>
+      </div>
+      <div class="card"><div class="slabel">SCORE DIFFERENTIALS (LAST 20)</div><div id="dh-diffs"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- Course Editor -->
+<div id="ce-modal" class="modal-bg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#e8f5e8" id="ce-title">ADD COURSE</div>
+      <button class="btn btn-outline btn-sm" onclick="closeCE()">CANCEL</button>
+    </div>
+    <div class="card">
+      <div class="slabel">Course Name</div>
+      <input id="ce-name" class="field-input" placeholder="e.g. Royal Birkdale" style="margin-bottom:10px"/>
+      <div class="g2" style="margin-bottom:10px">
+        <div><div class="slabel">Tee Colour</div>
+          <select id="ce-tee" class="field-input">
+            <option value="">Select...</option>
+            <option>White</option><option>Yellow</option><option>Red</option><option>Blue</option>
+            <option>Black</option><option>Gold</option><option>Silver</option><option>Green</option>
+          </select></div>
+        <div><div class="slabel">Custom Tee Name</div>
+          <input id="ce-tee-custom" class="field-input" placeholder="e.g. Medal"/></div>
+      </div>
+      <div class="g2">
+        <div><div class="slabel">Course Rating</div>
+          <input id="ce-rating" class="field-input" type="tel" inputmode="decimal" placeholder="e.g. 72.1"/></div>
+        <div><div class="slabel">Slope Rating</div>
+          <input id="ce-slope" class="field-input" type="tel" inputmode="decimal" placeholder="e.g. 125"/></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="slabel">HOLE DETAILS — Par / Stroke Index / Distance (yds)</div>
+      <div class="matrix-wrap">
+        <table class="course-tbl" id="ce-holes">
+          <thead><tr><th>Hole</th><th>Par</th><th>SI</th><th>Dist</th></tr></thead>
+          <tbody id="ce-holes-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green" style="flex:1;padding:12px" onclick="saveCourse()">SAVE COURSE</button>
+      <button id="ce-del-btn" class="btn btn-danger" style="padding:12px;display:none" onclick="deleteCourse()">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shot Logger -->
+<div id="sl-modal" class="modal-bg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#e8f5e8" id="sl-title">LOG SHOT</div>
+        <div style="font-size:10px;color:#4a7a4a" id="sl-sub">Hole 1 · Par 4</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeSL()">DONE</button>
+    </div>
+    <div id="sl-shot-list" style="margin-bottom:10px"></div>
+    <div id="sl-add">
+      <div style="border-top:1px solid #1e3a1f;padding-top:10px;margin-bottom:8px">
+        <div class="slabel">SHOT TYPE</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px" id="sl-type-btns"></div>
+      </div>
+      <!-- Caddy -->
+      <div id="sl-caddy" style="display:none">
+        <div class="card-dark" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span>🎩</span><div class="slabel" style="margin-bottom:0">CADDY SUGGESTION</div>
+          </div>
+          <input id="sl-target" class="field-input" type="tel" inputmode="decimal"
+            placeholder="Target distance (yds)" style="margin-bottom:6px"
+            oninput="this.value=this.value.replace(/[^0-9.]/g,'');renderCaddy()"/>
+          <div id="sl-caddy-out"></div>
+        </div>
+      </div>
+      <div id="sl-fields"></div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-danger" style="flex:1" onclick="addPenalty()">+ Penalty</button>
+        <button class="btn btn-green" style="flex:2" onclick="addShot()">ADD SHOT</button>
+      </div>
+    </div>
+    <div style="border-top:1px solid #1e3a1f;padding-top:10px;margin-top:6px;
+      display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span style="font-size:10px;color:#4a7a4a">SHOTS: </span>
+        <span style="font-size:15px;font-weight:700;color:#e8f5e8" id="sl-shot-count">0</span>
+        <span style="font-size:10px;color:#4a7a4a;margin-left:8px">PUTTS: </span>
+        <span style="font-size:15px;font-weight:700;color:#ce93d8" id="sl-putt-count">0</span>
+      </div>
+      <div style="display:flex;gap:5px">
+        <button class="btn btn-outline btn-sm" onclick="prevHole()">← Prev</button>
+        <button class="btn btn-green btn-sm" onclick="nextHole()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Practice Bag -->
+<div id="p-bag-modal" class="modal-bg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><div style="font-size:13px;font-weight:700;color:#e8f5e8">MY BAG</div>
+        <div id="p-bag-cnt" style="font-size:9px;color:#4a7a4a;margin-top:2px">0 clubs</div></div>
+      <button class="btn btn-green btn-sm" onclick="pCloseBag()">DONE</button>
+    </div>
+    <div style="border-bottom:1px solid #1a2e1b;margin-bottom:14px"></div>
+    <div id="p-bag-clubs"></div>
+  </div>
+</div>
+
+<!-- Practice Edit Shot -->
+<div id="p-edit-modal" class="modal-bg">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:13px;font-weight:700;color:#e8f5e8">EDIT SHOT</div>
+      <button class="btn btn-outline btn-sm" onclick="closePEdit()">CANCEL</button>
+    </div>
+    <div id="p-edit-body"></div>
+    <div class="g2">
+      <button class="btn btn-green btn-full" onclick="savePEdit()">SAVE</button>
+      <button class="btn btn-danger btn-full" onclick="deletePShot()">DELETE</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
